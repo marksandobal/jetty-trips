@@ -9,27 +9,36 @@
     <div class="col-12">
       <div class="text-center">
         <h3>Corridas Asignadas</h3>
-        <div class="alert alert-primary" role="alert">
-          <strong>19 de Enero</strong>
-        </div>
       </div>
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title text-gren">Polanco - Santa Fe</h5>
-          <h6 class="card-subtitle mb-2 text-muted">Horario de salida</h6>
-          <p class="card-text text-gren">8:15 am</p>
-          <div>
-            <strong>Inicia: </strong> Av. Vasco de Quiroga 1000
-          </div>
-          <div>
-            <strong>Termina: </strong> Av. Ejercto nacional 4, Col. Polanco
+
+      <% Hash[@trip_per_days.sort].each do |key, trips| %>
+        <div class="alert alert-primary text-center" role="alert">
+          <strong>
+            <%= I18n.l(key.to_date, format: '%d %B') %>
+          </strong>
+        </div>
+        <% trips.each do |trip| %>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title text-gren"><%= trip.name %></h5>
+              <h6 class="card-subtitle mb-2 text-muted">Horario de salida</h6>
+              <p class="card-text text-gren"><%= Time.now.strftime("%H:%M %p") %></p>
+              <div>
+                <% trip_stops(trip.trip_stops) %>
+                <strong>Inicia: </strong> <%= first_stop&.address %>
+              </div>
+              <div>
+                <strong>Termina: </strong> <%= last_stop&.address %>
+              </div>
+              <br>
+              <div>
+                <button class="btn btn-gren btn-lg btn-block">Ver paradas y usuarios</button>
+              </div>
+            </div>
           </div>
           <br>
-          <div>
-            <button class="btn btn-gren btn-lg btn-block">Ver paradas y usuarios</button>
-          </div>
-        </div>
-      </div>
+        <% end %>
+      <% end %>
     </div>
   </div>
 </div>
