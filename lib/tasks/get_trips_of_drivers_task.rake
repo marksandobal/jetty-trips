@@ -12,27 +12,21 @@ namespace :get_trips_of_drivers_task do
         email: email,
         password: password
       )
-
-      response = jetty_api.get_token('/drivers/session')
-      if response[:success]
-        token  = response[:response][:auth_token]
-        result = jetty_api.get_trips_by_driver(token, '/drivers/trips')
-
-        trips  = result[:response]
-        ActiveRecord::Base.transaction do
-          trips.each do |trip|
-            new_trip   = format_trip(trip, driver)
-            save_trip  = save_trip(new_trip)
-            trip_stops = trip["trip_stops"]
-  
-            trip_stops.each do |trip_stop|
-              new_trip_stop  = fromat_strip_stop(save_trip, trip_stop)
-              save_trip_stop = save_trip_stop(new_trip_stop)
-            end
-          end
+      puts "=== Getting Token Driver #{driver.email} ==="
+      if driver.authentication_token.nil?
+        response = jetty_api.get_token('/drivers/session')
+        if response[:success]
+          token  = response[:response][:auth_token]
+          #save token driver
+          driver.update!(authentication_token: token)
+          puts "=== Getting Trips of Driver #{driver.email} ==="
+          request_trips(jetty_api, token, driver)
+        else
+          errors << { email: email, error: response[:response].message, message: response[:response]["message"] }
         end
       else
-        errors << { email: email, error: response[:response].message, message: response[:response]["message"] }
+        puts "=== Getting Trips of Driver #{driver.email} ==="
+        request_trips(jetty_api, driver.authentication_token, driver)
       end
     end
 
@@ -43,14 +37,31 @@ namespace :get_trips_of_drivers_task do
   end
 end
 
+def request_trips(jetty_api,token, driver)
+  result = jetty_api.get_trips_by_driver(token, '/drivers/trips')
+  trips  = result[:response]
+
+  ActiveRecord::Base.transaction do
+    trips.each do |trip|
+      new_trip   = format_trip(trip, driver)
+      save_trip  = save_trip(new_trip)
+      trip_stops = trip["trip_stops"]
+
+      trip_stops.each do |trip_stop|
+        new_trip_stop  = fromat_strip_stop(save_trip, trip_stop)
+        save_trip_stop = save_trip_stop(new_trip_stop)
+      end
+    end
+  end
+end
 
 def format_trip(trip, driver)
   {
     driver_id: driver.id,
-    date:     trip["date"],
-    price:    trip["price"],
-    name:     trip["name"],
-    status:   trip["status"]
+    date:      trip["date"],
+    price:     trip["price"],
+    name:      trip["name"],
+    status:    trip["status"]
   }
 end
 
