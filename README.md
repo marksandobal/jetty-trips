@@ -1,6 +1,6 @@
 # Jetty Trip Application
 
-##Requirements
+## Requirements
 
 * ruby
 * rails
