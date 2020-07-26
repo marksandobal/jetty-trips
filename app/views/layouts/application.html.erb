@@ -10,6 +10,26 @@
   </head>
 
   <body>
+    <%= render "partials/navigation" %>
+    <div class="text-center">
+      <% flash.each do |type, msg| %>
+      <% if type.eql?("alert") %>
+        <div class="alert alert-danger" role="alert">
+          <%= msg %>
+        </div>
+      <% else %>
+        <div class="alert alert-success" role="alert">
+          <%= msg %>
+        </div>
+      <% end %>
+    <% end %>
+    </div>
+
     <%= yield %>
   </body>
+  <script>
+    setTimeout(function(){ 
+      $("[role=alert]").hide();
+     }, 3000);
+  </script>
 </html>
