@@ -4,11 +4,10 @@
       <div class="text-center">
         <h3>Corridas Asignadas</h3>
       </div>
-
-      <% Hash[@trip_per_days.sort].each do |key, trips| %>
-        <div class="alert alert-primary text-center" role="alert">
+      <% Hash[@trip_per_days.sort.reverse].each do |key, trips| %>
+        <div class="alert alert-primary text-center">
           <strong>
-            <%= I18n.l(key.to_date, format: '%d %B') %>
+            <%= trips.first.date.strftime("%d %B") %>
           </strong>
         </div>
         <% trips.each do |trip| %>
@@ -26,7 +25,7 @@
               </div>
               <br>
               <div>
-                <button class="btn btn-gren btn-lg btn-block">Ver paradas y usuarios</button>
+                <%= link_to "Ver paradas y usuarios", trip_stops_path(trip.id), class: 'btn btn-gren btn-lg btn-block' %>
               </div>
             </div>
           </div>
