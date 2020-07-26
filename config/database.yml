@@ -80,6 +80,7 @@ test:
 #
 production:
   <<: *default
-  database: jetty-trip
-  username: jetty-trip
-  password: <%= ENV['JETTY-TRIP_DATABASE_PASSWORD'] %>
+  host: <%= ENV["DATABASE_HOST"] %>
+  username: <%= ENV["DATABASE_USERNAME"] %>
+  password: <%= ENV["DATABASE_PASSWORD"] %>
+  database: <%= ENV["DATABASE_NAME"] %>
