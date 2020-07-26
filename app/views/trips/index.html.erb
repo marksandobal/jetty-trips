@@ -1,9 +1,10 @@
 <div class="container">
   <div class="row">
     <div class="col-12">
-      <div class="text-center">
+      <div class="text-center border-bottom">
         <h3>Corridas Asignadas</h3>
       </div>
+      <br>
       <% Hash[@trip_per_days.sort.reverse].each do |key, trips| %>
         <div class="alert alert-primary text-center">
           <strong>
@@ -15,7 +16,7 @@
             <div class="card-body">
               <h5 class="card-title text-gren"><%= trip.name %></h5>
               <h6 class="card-subtitle mb-2 text-muted">Horario de salida</h6>
-              <p class="card-text text-gren"><%= Time.now.strftime("%H:%M %p") %></p>
+              <p class="card-text text-gren"><%= trip.date.strftime("%H:%M %p") %></p>
               <div>
                 <% trip_stops(trip.trip_stops) %>
                 <strong>Inicia: </strong> <%= first_stop&.address %>
