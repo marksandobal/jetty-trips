@@ -24,7 +24,6 @@ ActiveRecord::Schema.define(version: 2020_07_25_234800) do
     t.boolean "active"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-
     t.integer "user_id"
     t.string "authentication_email"
     t.string "authentication_token"

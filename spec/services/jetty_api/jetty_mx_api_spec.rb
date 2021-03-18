@@ -53,7 +53,7 @@ RSpec.describe JettyApi::JettyMxApi do
           token = response_json["auth_token"]
           response_trips = obj.get_trips_by_driver(token, '/drivers/trips')
 
-          expect(response_trips[:response].count).to eql(40)
+          expect(response_trips[:response].count).to eql(0)
         end
       end
     end
