@@ -11,6 +11,12 @@ blocks:
         - name: bundle install
           commands:
             - checkout
-            - sem-version ruby 2.6.0
+            - sem-service start postgres 11
+            - sem-version ruby 2.7.2
             - bundle install --deployment --path vendor/bundle
             - bundle exec rspec
+      env_vars:
+        - name: DATABASE_URL
+          value: 'postgres://hikftxopiiwsyj:46ddfcd43b37a304243946908f896dd37416307890db6e86841690d28e292cc4@ec2-54-198-252-9.compute-1.amazonaws.com:5432/d28vlurl1cno62'
+        - name: RAILS_ENV
+          value: test
