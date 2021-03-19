@@ -5,15 +5,43 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: bundle exec rspec
+  - name: Setup Proyect
     task:
       jobs:
         - name: bundle install
           commands:
             - checkout
+            - cache restore
             - sem-service start postgres
+            - psql -U postgres -h localhost -c "CREATE USER semaphore"
+            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
             - sem-version ruby 2.6.0
-            - bundle install --deployment --path vendor/bundle
-            - bundle exec rake db:setup
-            - bundle exec rspec
-
+            - bundle install --deployment -j 4 --path vendor/bundle
+            - 'bundle exec rake db:setup'
+  - name: Run testing
+    task:
+      jobs:
+        - name: Excecute rspec-models
+          commands:
+            - checkout
+            - cache restore
+            - sem-service start postgres
+            - psql -U postgres -h localhost -c "CREATE USER semaphore"
+            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+            - sem-version ruby 2.6.0
+            - bundle install --deployment -j 4 --path vendor/bundle
+            - 'bundle exec rake db:setup'
+            - 'bundle exec rake db:schema:load'
+            - bundle exec rspec spec/models
+        - name: Excecute rspec-controllers
+          commands:
+            - checkout
+            - cache restore
+            - sem-service start postgres
+            - psql -U postgres -h localhost -c "CREATE USER semaphore"
+            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+            - sem-version ruby 2.6.0
+            - bundle install --deployment -j 4 --path vendor/bundle
+            - 'bundle exec rake db:setup'
+            - 'bundle exec rake db:schema:load'
+            - bundle exec rspec spec/controllers
