@@ -5,18 +5,43 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: bundle exec rspec
+  - name: Setup Proyect
     task:
       jobs:
         - name: bundle install
           commands:
             - checkout
-            - sem-service start postgres 11
-            - sem-version ruby 2.7.2
-            - bundle install --deployment --path vendor/bundle
-            - bundle exec rspec
-      env_vars:
-        - name: DATABASE_URL
-          value: 'postgres://hikftxopiiwsyj:46ddfcd43b37a304243946908f896dd37416307890db6e86841690d28e292cc4@ec2-54-198-252-9.compute-1.amazonaws.com:5432/d28vlurl1cno62'
-        - name: RAILS_ENV
-          value: test
+            - cache restore
+            - sem-service start postgres
+            - psql -U postgres -h localhost -c "CREATE USER semaphore"
+            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+            - sem-version ruby 2.6.0
+            - bundle install --deployment -j 4 --path vendor/bundle
+            - 'bundle exec rake db:setup'
+  - name: Run testing
+    task:
+      jobs:
+        - name: Excecute rspec-models
+          commands:
+            - checkout
+            - cache restore
+            - sem-service start postgres
+            - psql -U postgres -h localhost -c "CREATE USER semaphore"
+            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+            - sem-version ruby 2.6.0
+            - bundle install --deployment -j 4 --path vendor/bundle
+            - 'bundle exec rake db:setup'
+            - 'bundle exec rake db:schema:load'
+            - bundle exec rspec spec/models
+        - name: Excecute rspec-controllers
+          commands:
+            - checkout
+            - cache restore
+            - sem-service start postgres
+            - psql -U postgres -h localhost -c "CREATE USER semaphore"
+            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+            - sem-version ruby 2.6.0
+            - bundle install --deployment -j 4 --path vendor/bundle
+            - 'bundle exec rake db:setup'
+            - 'bundle exec rake db:schema:load'
+            - bundle exec rspec spec/controllers
