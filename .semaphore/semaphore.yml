@@ -1,47 +1,59 @@
 version: v1.0
-name: Ruby
+name: Jetty Trips
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: Setup Proyect
+  - name: Setup
     task:
       jobs:
-        - name: bundle install
+        - name: bundle
           commands:
             - checkout
-            - cache restore
-            - sem-service start postgres
-            - psql -U postgres -h localhost -c "CREATE USER semaphore"
-            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+            - 'cache restore gems-$SEMAPHORE_GIT_BRANCH-$(checksum Gemfile.lock),gems-$SEMAPHORE_GIT_BRANCH-,gems-master-'
+            - bundle install --deployment -j 4 --path vendor/bundle
+            - cache store gems-$SEMAPHORE_GIT_BRANCH-$(checksum Gemfile.lock) vendor/bundle
+    dependencies: []
+  - name: Code scanning
+    task:
+      jobs:
+        - name: check style + security
+          commands:
+            - checkout
+            - 'cache restore gems-$SEMAPHORE_GIT_BRANCH-$(checksum Gemfile.lock),gems-$SEMAPHORE_GIT_BRANCH-,gems-master-'
             - sem-version ruby 2.6.0
             - bundle install --deployment -j 4 --path vendor/bundle
             - 'bundle exec rake db:setup'
-  - name: Run testing
+            - cache store
+      prologue:
+        commands:
+          - cache restore
+          - sem-service start postgres
+          - psql -U postgres -h localhost -c "CREATE USER semaphore"
+          - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+    dependencies:
+      - Setup
+  - name: Unit tests
     task:
+      prologue:
+        commands:
+          - checkout
+          - 'cache restore gems-$SEMAPHORE_GIT_BRANCH-$(checksum Gemfile.lock),gems-$SEMAPHORE_GIT_BRANCH-,gems-master-'
+          - sem-service start postgres
+          - psql -U postgres -h localhost -c "CREATE USER semaphore"
+          - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
+          - bundle install --deployment --path vendor/bundle
+          - 'bundle exec rake db:setup'
       jobs:
-        - name: Excecute rspec-models
+        - name: RSpec - model tests
           commands:
-            - checkout
-            - cache restore
-            - sem-service start postgres
-            - psql -U postgres -h localhost -c "CREATE USER semaphore"
-            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
-            - sem-version ruby 2.6.0
-            - bundle install --deployment -j 4 --path vendor/bundle
-            - 'bundle exec rake db:setup'
-            - 'bundle exec rake db:schema:load'
             - bundle exec rspec spec/models
-        - name: Excecute rspec-controllers
+        - name: RSpec - controller tests
           commands:
-            - checkout
-            - cache restore
-            - sem-service start postgres
-            - psql -U postgres -h localhost -c "CREATE USER semaphore"
-            - psql -U postgres -h localhost -c "ALTER USER semaphore WITH SUPERUSER;"
-            - sem-version ruby 2.6.0
-            - bundle install --deployment -j 4 --path vendor/bundle
-            - 'bundle exec rake db:setup'
-            - 'bundle exec rake db:schema:load'
             - bundle exec rspec spec/controllers
+        - name: RSpec - services
+          commands:
+            - bundle exec rspec spec/services
+    dependencies:
+      - Code scanning
